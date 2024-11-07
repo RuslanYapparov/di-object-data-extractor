@@ -1,0 +1,1593 @@
+openapi: 3.1.0
+info:
+  title: 'Спецификация API сервера информации об объектах инфраструктуры'
+  description: 'Имитирует запросы для получения данных объектов инфраструктуры из базы паспортных данных ЕК АСУИ'
+  version: '1.0'
+servers:
+  - description: diode-server default url
+    url: http://localhost:8070
+tags:
+  - description: 'API для получения данных, характерных для всех хозяйств'
+    name: 'Общее: объекты'
+  - description: 'API получения данных об объектах путевого хозяйства'
+    name: 'Путейцы: объекты'
+  - description: 'API получения данных для создания документов-характеристик объектов хозяйства пути'
+    name: 'Путейцы: справки-характеристики объектов'
+  - description: 'API получения данных для создания протоколов отказов объектов хозяйства пути'
+    name: 'Путейцы: протокола по отказам'
+paths:
+  /api/v1/objects/common/stationway/mini/{station_id}:
+    get:
+      parameters:
+        - description: 'Идентификатор станции'
+          in: path
+          name: 'station_id'
+          schema:
+            type: integer
+            format: int64
+            examples:
+              - 7
+          required: true
+      description: >-
+        Возвращает массив DTO с минимальной информацией о станционных путях или пустой массив, если не получилось найти станцию по идентификатору. Параметр station_id должен быть больше 0.
+      operationId: getStationWayMiniDtos
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StationWayMiniDto'
+          description: 'Массив DTO с минимальной информацией о станционных путях найден без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ArrayIndexOutOfBoundsException'
+                message: 'Array index out of range: -1'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр id объекта Станция не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе'
+      summary: 'Получение информации об объектах, общих для всех хозяйств'
+      tags:
+        - 'Общее: объекты'
+  /api/v1/objects/p/distance/{distance_id}:
+    get:
+      parameters:
+        - description: 'Идентификатор структурного подразделения - дистанции пути'
+          in: path
+          name: 'distance_id'
+          schema:
+            type: integer
+            format: int64
+            examples:
+              - 1
+          required: true
+      description: >-
+        Возвращает DTO с полноценной информацией о дистанции пути по ее идентификатору или 404-ошибку, если найти не удалось.
+      operationId: getPDistanceById
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WayMaintenanceDistanceDto'
+          description: 'DTO с полноценной информацией о дистанции пути получен без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр id объекта дистанция пути не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ObjectNotFoundException'
+                message: '"Не удалось найти в базе данных объект "дистанция пути" с ид=-1'
+                details: '... stacktrace ...'
+          description: 'Не найдена информация о дистанции пути в соответствии с переданным идентификатором'
+      summary: 'Получение исчерпывающей информации о дистанции пути'
+      tags:
+        - 'Путейцы: объекты'
+  /api/v1/objects/p/distance:
+    get:
+      parameters:
+        - description: 'Параметр-аббревиатура дирекции инфраструктуры'
+          in: query
+          name: 'dirabbrev'
+          schema:
+            type: string
+            examples:
+              - 'ВЗДИ'
+          required: true
+      description: >-
+        Возвращает массив DTO с минимальной информацией о дистанции пути по идентификатору-аббревиатуре дирекции инфраструктуры, в состав которой входят дистанции или пустой массив, если найти не удалось.
+      operationId: getPDistancesByDIabbrev
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WayMaintenanceDistanceMiniDto'
+          description: 'Массив DTO с минимальной информацией о дистанции пути получен без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр dirAbbrev не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе'
+      summary: 'Получение массива DTO с минимальной информацией о дистанциях пути по аббревиатуре дирекции'
+      tags:
+        - 'Путейцы: объекты'
+  /api/v1/objects/p/rail:
+    get:
+      requestBody:
+        description: 'DTO с информацией о конкретном месте, относительно которого будет поиск вариантов рельсов'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationDto'
+            example:
+              wayType: 'INTERSTATION_TRACK'
+              locationId: 1
+              wayNumber: '2'
+              km: 1239
+              picket: 7
+              meter: 7
+              lineSide: 'LEFT'
+        required: true
+      description: >-
+        Возвращает массив DTO с минимальной информацией о рельсах вблизи конкретного места, переданного в LocationDto. Возвращает 404 ошибку, если LocationDto не верен (координата не соответствует типу пути), 400 ошибку, если полученный LocationDto содержит поля с null, и пустой массив, если вблизи переданной координаты не обнаружено рельсов.
+      operationId: getMiniRailsByLocationDto
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RailMiniDto'
+          description: 'Массив DTO с минимальной информацией о рельсах получен без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр "какой-либо из параметров конкретного места" не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе или в теле запроса'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ObjectNotFoundException'
+                message: >-
+                  Не удалось найти в базе данных объект "массив вариантов рельсов для конкретного места" со следующими критериями выборки "... locationDTO ..."
+                details: '... stacktrace ...'
+          description: 'Несогласованность в данных locationDto'
+      summary: >-
+        Получение массива DTO с минимальной информацией о рельсах вблизи конкретного места, переданного с помощью LocationDto
+      tags:
+        - 'Путейцы: объекты'
+  /api/v1/objects/p/joint:
+    get:
+      parameters:
+        - description: 'Тип стыка (токопроводящий, изолирующий сигнал, изолирующий стрелочный перевод)'
+          in: query
+          name: 'type'
+          schema:
+            type: string
+            examples:
+              - 'CONDUCTING'
+            enum:
+              - CONDUCTING
+              - ISOLATING_SIGNAL
+              - ISOLATING_SWITCH
+          required: true
+      requestBody:
+        description: 'DTO с информацией о конкретном месте, относительно которого будет поиск вариантов стыков'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationDto'
+            example:
+              wayType: 'INTERSTATION_TRACK'
+              locationId: 1
+              wayNumber: '2'
+              km: 1239
+              picket: 7
+              meter: 7
+              lineSide: 'LEFT'
+        required: true
+      description: >-
+        Возвращает массив DTO с минимальной информацией о рельсовых стыках вблизи конкретного места, переданного в LocationDto. Возвращает 404 ошибку, если LocationDto не верен (координата не соответствует типу пути), 400 ошибку, если полученный LocationDto содержит поля с null или передан неверный параметр type, и пустой массив, если вблизи переданной координаты не обнаружено стыков.
+      operationId: getMiniJointsByLocationDto
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JointMiniDto'
+          description: 'Массив DTO с минимальной информацией о рельсовых стыках получен без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр "какой-либо из параметров конкретного места" не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе или в теле запроса'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ObjectNotFoundException'
+                message: >-
+                  Не удалось найти в базе данных объект массив вариантов рельсовых стыков для конкретного места со следующими критериями выборки [... locationDTO ...]
+                details: '... stacktrace ...'
+          description: 'Несогласованность в данных locationDto'
+      summary: >-
+        Получение массива DTO с минимальной информацией о рельсовых стыках определенного типа вблизи конкретного места, переданного с помощью LocationDto
+      tags:
+        - 'Путейцы: объекты'
+  /api/v1/objinfo/p/rail/{rail_id}:
+    get:
+      parameters:
+        - description: 'Идентификатор рельса в базе данных'
+          in: path
+          name: 'rail_id'
+          schema:
+            type: integer
+            format: int64
+            examples:
+                - 12345
+          required: true
+        - description: 'Тип пути, на котором расположен объект.'
+          in: query
+          name: 'waytype'
+          schema:
+            $ref: '#/components/schemas/WayType'
+            examples:
+              - 'INTERSTATION_TRACK'
+          required: true
+      description: >-
+        Возвращает заготовку DTO с исчерпывающей информацией, доступной в базе данных о рельсе для дальнейшего создания справки-характеристики о нем. Дополнительные поля возвращаемого DTO равны null, так как не относятся к сервису (заполняются пользователем в UI). Возвращает 404 ошибку, если передан неверный id рельса (не найден в БД), 400 ошибку, если указан неправильный параметр.
+      operationId: getRailInfoDto
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/RailInfoDto'
+          description: 'Все необходимые данные для формирования RailInfoDto получены без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр waytype не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ObjectNotFoundException'
+                message: >-
+                  Не удалось найти в базе данных объект рельс главного пути с ид=-1
+                details: '... stacktrace ...'
+          description: 'Отсутствуют данные о запрашиваемом рельсе'
+      summary: >-
+        Получение DTO с исчерпывающими данными, необходимыми для создания справки-характеристики рельса.
+      tags:
+        - 'Путейцы: справки-характеристики объектов'
+  /api/v1/objinfo/p/joint/{joint_id}:
+    get:
+      parameters:
+        - description: 'Идентификатор рельсового стыка в базе данных'
+          in: path
+          name: 'joint_id'
+          schema:
+            type: integer
+            format: int64
+            examples:
+              - 1234
+          required: true
+        - description: 'Тип пути, на котором расположен объект.'
+          in: query
+          name: 'waytype'
+          schema:
+            $ref: '#/components/schemas/WayType'
+            examples:
+              - 'STATION_WAY'
+          required: true
+        - description: 'Тип стыка.'
+          in: query
+          name: 'jointtype'
+          schema:
+            type: string
+            examples:
+              - 'CONDUCTING'
+            enum:
+              - CONDUCTING
+              - ISOLATING_SIGNAL
+              - ISOLATING_SWITCH
+          required: true
+      description: >-
+        Возвращает заготовку DTO с исчерпывающей информацией, доступной в базе данных о рельсовом стыке для дальнейшего создания справки-характеристики о нем. Дополнительное поле возвращаемого DTO равно null, так как не относятся к сервису (заполняются пользователем в UI). Возвращает 404 ошибку, если передан неверный id стыка (не найден в БД), 400 ошибку, если указан неправильный параметр.
+      operationId: getJointInfoDto
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/JointInfoDto'
+          description: 'Все необходимые данные для формирования JointInfoDto получены без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр jointtype не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ObjectNotFoundException'
+                message: >-
+                  Не удалось найти в базе данных объект токопроводящий рельсовый стык на станционном пути с ид=-1
+                details: '... stacktrace ...'
+          description: 'Отсутствуют данные о запрашиваемом рельсовом стыке'
+      summary: >-
+        Получение DTO с исчерпывающими данными, необходимыми для создания справки-характеристики рельсового стыка.
+      tags:
+        - 'Путейцы: справки-характеристики объектов'
+  /api/v1/protocol/failure/p/joint:
+    get:
+      parameters:
+        - description: 'Тип стыка.'
+          in: query
+          name: 'type'
+          schema:
+            type: string
+            examples:
+              - 'CONDUCTING'
+            enum:
+              - CONDUCTING
+              - ISOLATING_SIGNAL
+              - ISOLATING_SWITCH
+          required: true
+      requestBody:
+        description: 'DTO с информацией о конкретном месте, относительно которого будет поиск вариантов стыков'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationDto'
+        required: true
+      description: >-
+        Возвращает DTO с данными, необходимыми пользователю в UI для создания протокола. Возвращает 404 ошибку, если по переданным параметрам невозможно найти данные, 400 ошибку, если указан неправильный параметр.
+      operationId: getJointFailureProtCreatingDataDto
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/JointFailureProtCreatingDataDto'
+          description: 'Все необходимые данные для формирования DTO получены без выброса исключений'
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'DatabaseConnectionException'
+                message: 'Failed to connect to database'
+                details: '... stacktrace ...'
+          description: 'Произошла ошибка на сервере во время операции'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'IllegalArgumentException'
+                message: 'Параметр type не может быть null.'
+                details: '... stacktrace ...'
+          description: 'Исключение возникло из-за ошибки в запросе.'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionDto'
+              example:
+                timestamp: '27-07-2024 09:10:50.77'
+                exception: 'ObjectNotFoundException'
+                message: >-
+                  Не удалось найти в базе данных объект массив вариантов рельсовых стыков для конкретного места со следующими критериями выборки: [.. locationDto ...]
+                details: '... stacktrace ...'
+          description: 'Отсутствуют данные в соответствии с переданными параметрами'
+      summary: >-
+        Получение DTO с данными, необходимыми пользователю в UI для создания протокола отказа рельсового стыка.
+      tags:
+        - 'Путейцы: протокола по отказам'
+components:
+  schemas:
+    ExceptionDto:
+      type: object
+      description: 'DTO, содержащий данные о возникшем в ходе работы программы исключении'
+      properties:
+        timestamp:
+          type: string
+          description: 'Дата и время когда произошло исключение (в формате "dd-MM-yyyy HH:mm:ss.SS")'
+          examples:
+            - '27-07-2024 07:07:07.77'
+        exception:
+          type: string
+          description: 'Наименование исключения'
+          examples:
+            - 'NullPointerException'
+        message:
+          type: string
+          description: 'Сообщение, с которым было выброшено исключение'
+          examples:
+            - 'Не указан обязательный параметр при запросе данных'
+        details:
+          type: string
+          description: 'Дополнительная информация, касающаяся исключения'
+          examples:
+            - 'stacktrace'
+    WayType:
+      type: string
+      description: 'Тип пути'
+      enum:
+        - INTERSTATION_TRACK
+        - STATION_MAIN_WAY
+        - STATION_WAY
+    ManagerMiniDto:
+      type: object
+      description: 'DTO, содержащий данные о сотруднике ОАО "РЖД" с типом "Руководитель"'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор сотрудника в базе данных'
+          examples:
+            - 16
+        fullName:
+          type: string
+          description: 'Полное имя сотрудника (Фамилия Имя Отчество)'
+          examples:
+            - 'Начальников Начальник Начальникович'
+        jobTitleAbbreviation:
+          type: string
+          description: 'Аббревиатура должности сотрудника (аббревиатура подразделения ОАО "РЖД")'
+          examples:
+            - 'ПЧ'
+    WayMaintenanceDistanceMiniDto:
+      type: object
+      description: 'Мини DTO, содержащий данные о дистанции пути'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор дистанции пути'
+          examples:
+            - 1
+            - 2
+        name:
+          type: string
+          description: 'Название дистанции пути'
+          examples:
+            - 'Кое-гденьская'
+            - 'Где-нибудьская'
+        number:
+          type: integer
+          description: 'Номер дистанции пути'
+          examples:
+            - 1
+            - 2
+        ich:
+          type: boolean
+          description: 'Является ли дистанция дистанцией инфраструктуры'
+          examples:
+            - false
+            - true
+    TransportDirectionDto:
+      type: object
+      description: 'DTO, содержащий данные о железнодорожном направлении'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор железнодорожного направления'
+          examples:
+            - 1
+        name:
+          type: string
+          description: 'Наименование железнодорожного направления'
+          examples:
+            -  'Там - Сямск'
+    MainWayDto:
+      type: object
+      description: 'DTO, содержащий данные о главном пути железнодорожного направления'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор главного пути'
+          examples:
+            - 1
+        transportDirection:
+          type: object
+          description: 'DTO железнодорожного направления, к которому относится главный путь'
+          $ref: '#/components/schemas/TransportDirectionDto'
+        number:
+          type: integer
+          description: 'Номер главного пути'
+          examples:
+            - 2
+    MainWaySectionDto:
+      type: object
+      description: 'DTO, содержащий данные об участке главного пути железнодорожного направления'
+      properties:
+        transportDirection:
+          type: object
+          description: 'Объект {@link TransportDirectionDto}, для которого определяется участок пути'
+          $ref: '#/components/schemas/TransportDirectionDto'
+        startKm:
+          type: integer
+          description: 'Значение километра начала участка'
+          examples:
+            - 7
+        startMeter:
+          type: integer
+          description: 'Значение метра начала участка'
+          examples:
+            - 500
+        endKm:
+          type: integer
+          description: 'Значение километра конца участка'
+          examples:
+            - 7
+        endMeter:
+          type: integer
+          description: 'Значение метра конца участка'
+          examples:
+            - 700
+    MainWayPlaceDto:
+      type: object
+      description: 'DTO, содержащий данные о конкретном месте главного пути железнодорожного направления'
+      properties:
+        transportDirection:
+          type: object
+          description: 'Железнодорожное направление, на котором находится описываемое место'
+          $ref: '#/components/schemas/TransportDirectionDto'
+        km:
+          type: integer
+          description: 'Километр главного пути железнодорожного направления, на котором находится описываемое место'
+          examples:
+            - 7
+        meterOnKm:
+          type: integer
+          description: 'Метр километра главного пути железнодорожного направления, на котором находится описываемое место'
+          examples:
+            - 777
+    StationNameDto:
+      type: object
+      description: 'DTO, содержащий данные о железнодорожной станции'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор станции (структурного предприятия)'
+          examples:
+            - 1001
+        name:
+          type: string
+          description: 'Название станции (структурного предприятия)'
+          examples:
+            - 'Где-нибудьск'
+    StationWayMiniDto:
+      type: object
+      description: 'DTO, содержащий данные о станционном пути железнодорожной станции'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор станционного пути'
+          examples:
+            - 7
+        number:
+          type: string
+          description: 'Номер (название) станционного пути'
+          examples:
+            - 'Путь 1A'
+        station:
+          type: object
+          description: 'Мини-DTO сущности железнодорожной станции'
+          $ref: '#/components/schemas/StationNameDto'
+    StationWaySectionDto:
+      type: object
+      description: 'DTO, содержащий данные о участке станционного пути'
+      properties:
+        stationWay:
+          type: object
+          description: 'Объект StationWayMiniDto, для которого определяется участок'
+          $ref: '#/components/schemas/StationWayMiniDto'
+        startMeter:
+          type: integer
+          description: 'Значение метра начала участка'
+          examples:
+            - 50
+        endMeter:
+          type: integer
+          description: 'Значение метра конца участка'
+          examples:
+            - 150
+    StationWayPlaceDto:
+      type: object
+      description: 'DTO, содержащий данные о конкретном месте станционного пути железнодорожной станции'
+      properties:
+        stationWay:
+          type: object
+          description: 'Мини-DTO сущности станционного пути железнодорожной станции'
+          $ref: '#/components/schemas/StationWayMiniDto'
+        meterOnStationWay:
+          type: integer
+          description: 'Метр станционного пути железнодорожной станции, на котором находится описываемое место'
+          examples:
+            - 75
+    LocationDto:
+      type: object
+      description: 'DTO, содержащий информацию о расположении железнодорожного объекта'
+      properties:
+        wayType:
+          description: 'Тип пути (станционный или главный)'
+          $ref: '#/components/schemas/WayType'
+          examples:
+            - STATION_WAY
+        locationId:
+          type: integer
+          format: int64
+          description: 'Идентификатор объекта-локации, в пределах которого находится объект'
+          examples:
+            - 8
+        wayNumber:
+          type: string
+          description: 'Строка, содержащая название (номер) пути'
+          examples:
+            - '5'
+        km:
+          type: integer
+          description: 'Целочисленное значение километра, на котором находится железнодорожный объект'
+          examples:
+            - 0
+        picket:
+          type: integer
+          description: 'Пикет километра, на котором находится железнодорожный объект'
+          examples:
+            - 1
+        meter:
+          type: integer
+          description: 'Метр пикета, на котором находится железнодорожный объект'
+          examples:
+            - 1
+        lineSide:
+          type: string
+          description: 'Сторонность рельсовой нити'
+          enum:
+            - LEFT
+            - RIGHT
+          examples:
+            - LEFT
+    WayMaintenanceDistanceDto:
+      type: object
+      description: 'DTO, содержащий данные о дистанции пути'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор дистанции пути'
+          examples:
+            - 1
+        name:
+          type: string
+          description: 'Название дистанции пути'
+          examples:
+            - 'Кое-гденьская'
+        regionalDirectorateAbbreviation:
+          type: string
+          description: 'Аббревиатура дирекции инфраструктуры'
+          examples:
+            - 'ВЗДИ'
+        managers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ManagerMiniDto'
+          description: 'Сет DTO-объектов, содержащий информацию обо всех руководителях дистанции пути'
+        number:
+          type: integer
+          description: 'Номер дистанции пути'
+          examples:
+            - 1
+        isIch:
+          type: boolean
+          description: 'Является ли дистанция ИЧ (дистанцией инфраструктуры)'
+          examples:
+            - true
+        mainWays:
+          type: array
+          items:
+            $ref: '#/components/schemas/MainWayDto'
+          description: 'Сет DTO-объектов, содержащий информацию о главных путях дистанции'
+        stations:
+          type: array
+          items:
+            $ref: '#/components/schemas/StationNameDto'
+          description: 'Сет DTO-объектов, содержащий информацию о станциях в границах дистанции'
+    RailMiniDto:
+      type: object
+      description: 'Мини DTO, содержащий данные о рельсе'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор рельса'
+          examples:
+            - 12345
+        lineSide:
+          type: string
+          description: 'Сторонность рельсовой нити'
+          examples:
+            - 'ЛЕВАЯ'
+            - 'ПРАВАЯ'
+        railKind:
+          type: string
+          description: 'Вид пути, на котором уложен рельс'
+          examples:
+            - 'БЕССТЫКОВОЙ'
+            - 'УРАВНИТЕЛЬНАЯ РУБКА'
+        startCoordinate:
+          type: number
+          format: float
+          description: 'Км.метр начала рельса'
+          examples:
+            - 5.30
+        endCoordinate:
+          type: number
+          format: float
+          description: 'Км.метр конца рельса'
+          examples:
+            - 5.55
+    JointMiniDto:
+      type: object
+      description: 'Мини DTO, содержащий данные о рельсовом стыке'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор рельсового стыка'
+          examples:
+            - 12345
+        type:
+          type: string
+          description: 'Тип рельсового стыка (изолирующий или токопроводящий)'
+          examples:
+            - 'ТОКОПРОВОДЯЩИЙ'
+        lineSide:
+          type: string
+          description: 'Сторонность рельсовой нити, на которой расположен рельсовый стык'
+          examples:
+            - 'ЛЕВАЯ'
+        coordinate:
+          type: number
+          format: float
+          description: 'Км.метр расположения стыка'
+          examples:
+            - 12.754
+    WayCharacteristicsDto:
+      type: object
+      description: 'DTO, содержащий информацию о характеристиках пути'
+      properties:
+        slope:
+          type: number
+          format: float
+          description: 'Уклон'
+          examples:
+            - -1.5
+        straight:
+          type: boolean
+          description: 'Флаг, определяющий, прямой участок или кривая'
+          examples:
+            - false
+        curveSide:
+          type: string
+          description: 'Сторонность кривой (null для прямого участка)'
+          examples:
+            - 'ЛЕВАЯ'
+        radius:
+          type: integer
+          description: 'Радиус кривой (null для прямого участка)'
+          examples:
+            - 1000
+        railElevation:
+          type: integer
+          description: 'Возвышение рельса (null для прямого участка)'
+          examples:
+            - 135
+        passengerTrainSpeed:
+          type: integer
+          description: 'Скорость движения пассажирских поездов'
+          examples:
+            - 120
+        freightTrainSpeed:
+          type: integer
+          description: 'Скорость движения грузовых поездов'
+          examples:
+            - 80
+        passedTonnageBeforeInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж до укладки'
+          examples:
+            - 500.75
+        passedTonnageAfterInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж после укладки'
+          examples:
+            - 200.57
+        freightIntensity:
+          type: number
+          format: float
+          description: 'Грузонапряженность'
+          examples:
+            - 95.57
+        lineClassSpecialization:
+          type: string
+          description: 'Класс и специализация линии'
+          examples:
+            - '1Т'
+        groupClassCode:
+          type: string
+          description: 'Код группы пути'
+          examples:
+            - '1О'
+        railType:
+          type: string
+          description: 'Тип рельсов'
+          examples:
+            - 'Р65'
+        railCategory:
+          type: string
+          description: 'Категория рельсов'
+          examples:
+            - 'Т1'
+        thermalHardening:
+          type: string
+          description: 'Тип термоупрочнения рельсов'
+          examples:
+            - 'ДИФФЕРЕНЦИАЛЬНО-ТЕРМОУПРОЧНЕННЫЕ'
+        wayType:
+          type: string
+          description: 'Тип пути'
+          examples:
+            - 'БЕССТЫКОВОЙ'
+        factory:
+          type: string
+          description: 'Завод-изготовитель рельсов'
+          examples:
+            - 'К'
+        factoryYear:
+          type: string
+          description: 'Год производства рельсов'
+          examples:
+            - '2015'
+        installationDate:
+          type: string
+          format: date
+          description: 'Дата укладки рельсов в путь'
+          examples:
+            - '01-07-2021'
+        sleeperMaterial:
+          type: string
+          description: 'Материал шпал'
+          examples:
+            - 'Ж/Б'
+        sleepersPerKm:
+          type: integer
+          description: 'Количество шпал на км'
+          examples:
+            - 1943
+        fasteningType:
+          type: string
+          description: 'Тип рельсовых скреплений'
+          examples:
+            - 'АРС'
+        ballastType:
+          type: string
+          description: 'Тип балласта'
+          examples:
+            - 'ЩЕБЕНЬ'
+        ballastHeight:
+          type: integer
+          description: 'Высота балласта'
+          examples:
+            - 45
+        capitalRepairDate:
+          type: string
+          format: date
+          description: 'Год и месяц капитального ремонта'
+          examples:
+            - '01-07-2021'
+        capitalRepairType:
+          type: string
+          description: 'Тип капитального ремонта'
+          examples:
+            - 'КРС'
+        intermediateRepairDate:
+          type: string
+          format: date
+          description: 'Год и месяц промежуточного ремонта'
+          examples:
+            - '01-09-2024'
+        intermediateRepairType:
+          type: string
+          description: 'Тип промежуточного ремонта'
+          examples:
+            - 'ППВ'
+    MainWayLashDto:
+      type: object
+      description: 'DTO сущности рельсовой плети, лежащей на главных путях железнодорожного направления.'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор рельсовой плети'
+          examples:
+            - 4321
+        name:
+          type: string
+          description: 'Цифробуквенное обозначение рельсовой плети'
+          examples:
+            - '77Л'
+        lineSide:
+          type: string
+          description: 'Сторонность рельсовой нити, на которой лежит плеть'
+          examples:
+            - 'ЛЕВАЯ'
+        length:
+          type: number
+          format: float
+          description: 'Длина рельсовой плети'
+          examples:
+            - 765.432
+        startCentimeterOnMeter:
+          type: integer
+          description: 'Сантиметр расположения начала рельсовой плети на метре ее переднего торца'
+          examples:
+            - 27
+        endCentimeterOnMeter:
+          type: integer
+          description: 'Сантиметр расположения конца рельсовой плети на метре ее заднего торца'
+          examples:
+            - 34
+        weldingCompany:
+          type: string
+          description: 'Рельсо-сварочное предприятие, на котором была изготовлена плеть'
+          examples:
+            - 'РСП-17'
+        installationDate:
+          type: string
+          format: date
+          description: 'Дата укладки рельсовой плети'
+          examples:
+            - '01-07-2021'
+        installationType:
+          type: string
+          description: 'Тип укладки'
+          examples:
+            - 'С/Г'
+        installedBy:
+          type: string
+          description: 'Предприятие, производившее укладку рельсовой плети'
+          examples:
+            - 'ПМС-200'
+        passedTonnageBeforeInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж до укладки рельсовой плети в путь'
+          examples:
+            - 500.75
+        passedTonnageAfterInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж после укладки рельсовой плети в путь'
+          examples:
+            - 200.57
+        lastTemperatureTensionDischargingDate:
+          type: string
+          format: date
+          description: 'Дата последней разрядки температурных напряжений в рельсовой плети'
+          examples:
+            - '30-04-2024'
+        lastTemperatureTensionDischargingTemperature:
+          type: integer
+          description: 'Температура, на которую была закреплена плеть'
+          examples:
+            - 27
+        lastTemperatureTensionDischargingReason:
+          type: string
+          description: 'Причина последней разрядки температурных напряжений в плети'
+          examples:
+            - 'ПОДВИЖКИ'
+        mainWayNumber:
+          type: integer
+          description: 'Номер главного пути, на котором лежит плеть'
+          examples:
+            - 2
+        mainWaySection:
+          type: object
+          description: 'Участок главного пути, на котором лежит плеть'
+          $ref: '#/components/schemas/MainWaySectionDto'
+    StationMainWaySwitchDto:
+      type: object
+      description: 'DTO сущности стрелочного перевода, расположенного на главном пути железнодорожной станции.'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор стрелочного перевода'
+          examples:
+            - 715
+        name:
+          type: string
+          description: 'Номер (наименование) стрелочного перевода'
+          examples:
+            - '7'
+        fullName:
+          type: string
+          description: 'Полное наименование стрелочного перевода'
+          examples:
+            - ''
+        project:
+          type: string
+          description: 'Проект стрелочного перевода'
+          examples:
+            - '2750'
+        railType:
+          type: string
+          description: 'Тип рельса стрелочного перевода'
+          examples:
+            - 'Р65'
+        beamsMaterial:
+          type: string
+          description: 'Материал брусьев стрелочного перевода'
+          examples:
+            - 'Ж/Б'
+        ballastType:
+          type: string
+          description: 'Тип балласта стрелочного перевода'
+          examples:
+            - 'ЩЕБЕНЬ'
+        crossMarking:
+          type: string
+          description: 'Марка крестовины стрелочного перевода'
+          examples:
+            - '1/11'
+        controlType:
+          type: string
+          description: 'Тип управления стрелочного перевода'
+          examples:
+            - 'Э/Ц'
+        lineSide:
+          type: string
+          description: 'Сторонность стрелочного перевода'
+          examples:
+            - 'ЛЕВЫЙ'
+        gauge:
+          type: integer
+          description: 'Ширина колеи, на которую зашит стрелочный перевод (в миллиметрах)'
+          examples:
+            - 1524
+        installationDate:
+          type: string
+          format: date
+          description: 'Дата установки стрелочного перевода'
+          examples:
+            - '15-06-2021'
+        passedTonnageBeforeInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж на момент укладки стрелочного перевода'
+          examples:
+            - 0.0
+        passedTonnageAfterInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж после укладки стрелочного перевода'
+          examples:
+            - 315.43
+        outcrossCurveLength:
+          type: integer
+          description: 'Длина закрестовинной кривой (в метрах)'
+          examples:
+            - 22
+        stationParkName:
+          type: string
+          description: 'Наименование парка станции, к которому относится стрелочный перевод'
+          examples:
+            -
+        stationMainWay:
+          type: object
+          description: 'Мини-DTO главного пути, на котором находится стрелочный перевод'
+          $ref: '#/components/schemas/StationWayMiniDto'
+        frameRailJointPlace:
+          type: object
+          description: 'Место, на котором находится стык рамного рельса стрелочного перевода'
+          $ref: '#/components/schemas/MainWayPlaceDto'
+        wayNameSwitchGoesOn:
+          type: string
+          description: 'Наименование пути, на который ведет стрелочный перевод'
+          examples:
+            - '3'
+    MainWayRailDto:
+      type: object
+      description: 'DTO сущности рельса, лежащего в главном пути железнодорожного направления.'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор рельса.'
+          examples:
+            - 12345
+        length:
+          type: number
+          format: float
+          description: 'Длина рельса.'
+          examples:
+            - 25.0
+        lineSide:
+          type: string
+          description: 'Сторонность рельсовой нити, на которой лежит рельс.'
+          examples:
+            - 'ЛЕВАЯ'
+        railKind:
+          type: string
+          description: 'Тип верхнего строения пути, к которому относится рельс.'
+          examples:
+            - 'БЕССТЫКОВОЙ'
+        type:
+          type: string
+          description: 'Тип рельса.'
+          examples:
+            - 'Р65'
+        category:
+          type: string
+          description: 'Категория рельса.'
+          examples:
+            - 'Т1'
+        thermalHardening:
+          type: string
+          description: 'Вид термоупрочнения рельса.'
+          examples:
+            - 'ДИФФЕРЕНЦИАЛЬНО-ТЕРМОУПРОЧНЕННЫЙ'
+        factory:
+          type: string
+          description: 'Завод изготовитель рельса.'
+          examples:
+            - 'K'
+        rollingDate:
+          type: string
+          description: 'Дата прокатки рельса на заводе.'
+          examples:
+            - 'V-2015'
+        fuseNumber:
+          type: string
+          description: 'Номер плавки рельса.'
+          examples:
+            - 'ЭV76543"'
+        installationDate:
+          type: string
+          format: date
+          description: 'Дата укладки рельса в путь.'
+          examples:
+            - '15-07-2021'
+        installationType:
+          type: string
+          description: 'Тип укладки рельса в путь.'
+          examples:
+            - 'С/Г'
+        gapBefore:
+          type: integer
+          description: 'Стыковой зазор в переднем торце рельса.'
+          examples:
+            - 0
+        gapAfter:
+          type: integer
+          description: 'Стыковой зазор в заднем торце рельса.'
+          examples:
+            - 0
+        passedTonnageBeforeInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж до укладки рельса в путь.'
+          examples:
+            - 500.75
+        passedTonnageAfterInstall:
+          type: number
+          format: float
+          description: 'Пропущенный тоннаж после укладки рельса в путь.'
+          examples:
+            - 200.57
+        verticalWear:
+          type: integer
+          description: 'Вертикальный износ рельса.'
+          examples:
+            - 2
+        horizontalWear:
+          type: integer
+          description: 'Горизонтальный износ рельса.'
+          examples:
+            - 2
+        lastMeasureDate:
+          type: string
+          format: date
+          description: 'Дата последней проверки характеристик рельса.'
+          examples:
+            - '01-06-2024'
+        lastMeasureRailTemp:
+          type: integer
+          description: 'Температура рельса при последней проверке характеристик.'
+          examples:
+            - 30
+        railLash:
+          $ref: '#/components/schemas/MainWayLashDto'
+          description: 'Опциональное поле, содержащее DTO плети для рельса.'
+        railSwitch:
+          $ref: '#/components/schemas/StationMainWaySwitchDto'
+          description: 'Опциональное поле, содержащее DTO стрелочного перевода для рельса.'
+        mainWayNumber:
+          type: integer
+          description: 'Номер главного пути.'
+          examples:
+            - 1
+        mainWaySection:
+          type: object
+          $ref: '#/components/schemas/MainWaySectionDto'
+    RailInfoDto:
+      type: object
+      description: 'DTO-класс, содержащий информацию о рельсе и характеристиках пути в конкретном месте.'
+      properties:
+        locationDescription:
+          type: string
+          description: 'Строка с названием конкретной локации.'
+          examples:
+            - 'Кое-гденьск - Где-либо'
+        wayCharacteristics:
+          $ref: '#/components/schemas/WayCharacteristicsDto'
+          description: 'Информация о характеристиках пути в конкретном месте.'
+        rail:
+          $ref: '#/components/schemas/MainWayRailDto'
+          description: 'Информация о самом рельсе.'
+        brokenRailExtraInfo:
+          description: 'Информация, необходимая для создания характеристики места излома.'
+          examples:
+            - null
+        metaData:
+          description: 'Метаданные документа, связанные с этой информацией.'
+          examples:
+            - null
+    StationWayConductingJointDto:
+      type: object
+      description: 'Класс DTO для хранения и передачи данных о токопроводящем стыке на станционном пути.'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор стыка в БД.'
+          examples:
+            - 4321
+        lineSide:
+          type: string
+          description: 'Сторона рельсовой нити, на которой расположен стык.'
+          examples:
+            - 'ПРАВАЯ'
+        status:
+          type: string
+          description: 'Статус рельсового стыка.'
+          examples:
+            - 'АКТИВЕН'
+        padsType:
+          type: string
+          description: 'Тип накладок.'
+          examples:
+            - 'ДВУХГОЛОВЫЕ'
+        padAmountOfHoles:
+          type: integer
+          description: 'Количество болтовых отверстий.'
+          examples:
+            - 6
+        gap:
+          type: integer
+          description: 'Значение величины стыкового зазора.'
+          examples:
+            - 10
+        verticalStep:
+          type: number
+          format: float
+          description: 'Значение величины вертикальной ступеньки.'
+          examples:
+            - 0.5
+        horizontalStep:
+          type: number
+          format: float
+          description: 'Значение величины горизонтальной ступеньки.'
+          examples:
+            - 0.9
+        lastMeasureDate:
+          type: string
+          format: date
+          description: 'Дата последнего измерения характеристик рельсового стыка.'
+          examples:
+            - '01-10-2024'
+        lastMeasureRailTemp:
+          type: integer
+          description: 'Температура рельса в момент последнего измерения характеристик.'
+          examples:
+            - 25
+        contactResistance:
+          type: integer
+          description: 'Величина переходного сопротивления в токопроводящем рельсовом стыке.'
+          examples:
+            - 200
+        lastResistanceMeasureDate:
+          type: string
+          format: date
+          description: 'Дата последнего измерения переходного сопротивления в токопроводящем стыке.'
+          examples:
+            - '15-08-2024'
+        lastPadsRemovalDate:
+          type: string
+          format: date
+          description: 'Дата последнего снятия накладок токопроводящего стыка.'
+          examples:
+            - '01-04-2024'
+        connectorTypes:
+          type: string
+          description: 'Типы рельсовых соединителей, установленных в токопроводящем рельсовом стыке.'
+          examples:
+            - 'СРСП'
+        connectorInstallationDate:
+          type: string
+          format: date
+          description: 'Дата установки рельсового соединителя(-лей) в токопроводящем рельсовом стыке.'
+          examples:
+            - '10-10-2022'
+        stationWayPlace:
+          $ref: '#/components/schemas/StationWayPlaceDto'
+          description: 'DTO с информацией о конкретном месте станционного пути.'
+    JointInfoDto:
+      type: object
+      description: 'DTO со всей необходимой информацией для создания характеристики рельсового стыка.'
+      properties:
+        locationDescription:
+          type: string
+          description: 'Строка с названием конкретной локации.'
+          examples:
+            - 'Где-нибудьск'
+        jointLocation:
+          $ref: '#/components/schemas/LocationDto'
+          description: 'DTO с информацией о расположении стыка из базы паспортных данных.'
+          examples:
+            - wayType: 'STATION_WAY'
+              locationId: 8
+              wayNumber: 3
+              km: 0,
+              picket: 7,
+              meter: 57,
+              lineSide: 'RIGHT'
+        wayCharacteristics:
+          $ref: '#/components/schemas/WayCharacteristicsDto'
+          description: 'DTO с информацией о характеристиках пути в конкретном месте.'
+        joint:
+          $ref: '#/components/schemas/StationWayConductingJointDto'
+          description: 'DTO с информацией о самом стыке.'
+        metaData:
+          examples:
+            - null
+    EmployeeDto:
+      type: object
+      description: 'DTO сущности сотрудника ОАО "РЖД".'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: 'Идентификатор сотрудника ОАО "РЖД".'
+          examples:
+            - 77
+        asutrPersonnelNumber:
+          type: integer
+          format: int64
+          description: 'Идентификатор сотрудника в ЕК АСУТР, необходим для получения данных о стаже и образовании работника.'
+          examples:
+            - 1000078
+        surname:
+          type: string
+          description: 'Фамилия сотрудника.'
+          examples:
+            - 'Апишин'
+        name:
+          type: string
+          description: 'Имя сотрудника.'
+          examples:
+            - 'Апи'
+        patronymic:
+          type: string
+          description: 'Отчество сотрудника.'
+          examples:
+            - 'Апиевич'
+        employeeType:
+          type: string
+          description: 'Тип должности сотрудника (руководитель, специалист, рабочий).'
+          examples:
+            - 'СПЕЦИАЛИСТ'
+        jobTitleAbbreviation:
+          type: string
+          description: 'Сокращенное название должности сотрудника.'
+          examples:
+            - 'ОТ'
+        fullTitle:
+          type: string
+          description: 'Полное название должности сотрудника.'
+          examples:
+            - 'Специалист по охране труда'
+    JointFailureProtCreatingDataDto:
+      type: object
+      description: >-
+        DTO с данными, необходимыми для пользователського ввода информации при создании протокола отказа токопроводящего или изолирующего стыка.
+      properties:
+        jointVariants:
+          type: array
+          items:
+            $ref: '#/components/schemas/JointMiniDto'
+          description: 'Массив DTO с минимальной информацией о стыках.'
+        diodeLocationDescription:
+          type: string
+          description: 'Наименование перегона или станции.'
+          examples:
+            - 'Кое-гденьск - Где-либо'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeDto'
+          description: 'Участники совещания, работники дистанции пути, так или иначе имеющие отношение к отказу.'
